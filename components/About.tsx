@@ -60,7 +60,7 @@ export default function About() {
             <div className="relative">
               <div className="aspect-[3/4] bg-gradient-to-br from-[#1A1A1A] via-[#141414] to-[#0A0A0A] border-2 border-[#1e1e1e] border-l-4 border-l-[#FF3C00] overflow-hidden">
                 <Image
-                  src="/images/Screenshot 2026-06-12 at 11.18.55 AM.png"
+                  src="/images/robertpicture.png"
                   alt="Robert - Tattoo Artist"
                   fill
                   className="object-cover"

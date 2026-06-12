@@ -9,8 +9,8 @@ const quickLinks = [
 ];
 
 const socials = [
-  { icon: Instagram, href: "https://instagram.com/robertsinktattoo", label: "Instagram" },
-  { icon: Facebook, href: "https://facebook.com/robertsinktattoo", label: "Facebook" },
+  { icon: Instagram, href: "https://www.instagram.com/robertkareltattoo/", label: "Instagram" },
+  { icon: Facebook, href: "https://www.facebook.com/people/robertkareltattoo/", label: "Facebook" },
 ];
 
 export default function Footer() {

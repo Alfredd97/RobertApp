@@ -46,7 +46,7 @@ export default function Booking() {
             <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-[#FF3C00]" />
 
             <iframe
-              src="https://calendly.com/your-artist"
+              src="https://calendly.com/alfreddaguilar97/30min"
               width="100%"
               height="650"
               frameBorder={0}

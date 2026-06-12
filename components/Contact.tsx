@@ -28,13 +28,13 @@ const socialLinks = [
   {
     icon: Instagram,
     label: "Instagram",
-    href: "https://instagram.com/robertsink",
+    href: "https://www.instagram.com/robertkareltattoo/",
     handle: "@robertsink",
   },
   {
     icon: Facebook,
     label: "Facebook",
-    href: "https://facebook.com/robertsink",
+    href: "https://www.facebook.com/people/robertkareltattoo/",
     handle: "Robert's Ink",
   },
 ];
