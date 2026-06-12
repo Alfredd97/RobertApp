@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const stats = [
   { value: "15+", label: "Years Tattooing" },
@@ -57,17 +58,14 @@ export default function About() {
             }`}
           >
             <div className="relative">
-              <div className="aspect-[3/4] bg-gradient-to-br from-[#1A1A1A] via-[#141414] to-[#0A0A0A] border-2 border-[#1e1e1e] border-l-4 border-l-[#FF3C00] flex items-center justify-center">
-                <div className="text-center opacity-30">
-                  <div className="w-24 h-24 rounded-full border-2 border-[#FF3C00] mx-auto mb-4 flex items-center justify-center">
-                    <span className="font-display text-3xl text-[#FF3C00]">
-                      R
-                    </span>
-                  </div>
-                  <p className="text-[#9CA3AF] text-xs tracking-widest uppercase">
-                    Artist Photo
-                  </p>
-                </div>
+              <div className="aspect-[3/4] bg-gradient-to-br from-[#1A1A1A] via-[#141414] to-[#0A0A0A] border-2 border-[#1e1e1e] border-l-4 border-l-[#FF3C00] overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&h=800&fit=crop"
+                  alt="Robert - Tattoo Artist"
+                  fill
+                  className="object-cover"
+                  priority
+                />
               </div>
               <div className="absolute -bottom-4 -right-4 w-32 h-32 border-r-2 border-b-2 border-[#FF3C00]/30" />
               <div className="absolute -top-4 -left-4 w-32 h-32 border-l-2 border-t-2 border-[#FF3C00]/30" />
