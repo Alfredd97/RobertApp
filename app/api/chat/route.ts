@@ -1,61 +1,34 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-const SYSTEM_PROMPT = `You are a helpful and warm customer service assistant for Robert Avery, a professional contemporary visual artist based in New York City.
-
-Robert specializes in dark surrealism and fine art photography. His work explores themes of identity, solitude, and the beauty found in shadow.
-
-Services and Pricing:
-- Portrait Session: $500 (2-hour session, includes 10 edited digital images)
-- Fine Art Print: $250 (custom framed prints available in multiple sizes)
-- Custom Commission: Starting from $1,500 (timeline varies by project complexity)
-
-When visitors ask about booking, direct them to use the Booking section on the website or the Calendly link at https://calendly.com/your-artist.
-
-Be warm, creative, and encouraging. Keep responses concise (2-4 sentences). If asked about something outside of art/services, gently redirect the conversation back to Robert's work.`;
+import { streamChatResponse } from "@/lib/ai/client";
+import { getSystemPrompt } from "@/lib/ai/system-prompts";
 
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        { error: "API key not configured" },
-        { status: 500 }
-      );
-    }
-
-    const stream = client.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      system: [
-        {
-          type: "text" as const,
-          text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" as const },
-        },
-      ],
-      messages,
-    });
+    // Get system prompt (you can pass a role query param to use different prompts)
+    // Example: POST /api/chat?role=sales
+    const url = new URL(req.url);
+    const role = url.searchParams.get("role") || "default";
+    const systemPrompt = getSystemPrompt(role);
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of stream) {
-            if (
-              event.type === "content_block_delta" &&
-              event.delta.type === "text_delta"
-            ) {
-              controller.enqueue(encoder.encode(event.delta.text));
+          for await (const chunk of streamChatResponse({
+            messages,
+            systemPrompt,
+            model: process.env.AI_MODEL || "claude-sonnet-4-6",
+            maxTokens: 1024,
+          })) {
+            if (chunk.type === "text" && typeof chunk.data === "string") {
+              controller.enqueue(encoder.encode(chunk.data));
             }
           }
           controller.close();
         } catch (error) {
+          console.error("Stream error:", error);
           controller.error(error);
         }
       },
