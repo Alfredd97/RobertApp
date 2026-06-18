@@ -2,26 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Mail, MapPin, Phone, Instagram, Facebook } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
-const contactInfo = [
-  {
-    icon: Mail,
-    label: "Email",
-    value: "hello@robertsink.tattoo",
-    href: "mailto:hello@robertsink.tattoo",
-  },
-  {
-    icon: Phone,
-    label: "Phone",
-    value: "+1 (718) 555-0147",
-    href: "tel:+17185550147",
-  },
-  {
-    icon: MapPin,
-    label: "The Shop",
-    value: "Williamsburg, Brooklyn, NY",
-    href: null,
-  },
+const contactInfoKeys = [
+  { icon: Mail, key: "email", value: "hello@robertsink.tattoo", href: "mailto:hello@robertsink.tattoo" },
+  { icon: Phone, key: "phone", value: "+1 (718) 555-0147", href: "tel:+17185550147" },
+  { icon: MapPin, key: "location", value: "Williamsburg, Brooklyn, NY", href: null },
 ];
 
 const socialLinks = [
@@ -42,6 +28,7 @@ const socialLinks = [
 export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -63,10 +50,10 @@ export default function Contact() {
           }`}
         >
           <p className="text-[#FF3C00] text-xs tracking-[0.4em] uppercase mb-4 font-heading font-bold">
-            Reach Out
+            {t.contact.reachOut}
           </p>
           <h2 className="font-display text-4xl md:text-5xl text-[#F0F0F0] tracking-widest">
-            CONTACT
+            {t.contact.title}
           </h2>
           <div className="h-1 w-20 bg-gradient-to-r from-transparent via-[#FF3C00] to-transparent mx-auto mt-6" />
         </div>
@@ -81,17 +68,17 @@ export default function Contact() {
             }`}
           >
             <h3 className="font-heading text-2xl text-[#F0F0F0] mb-8 tracking-wider font-bold">
-              THE SHOP
+              {t.contact.shop}
             </h3>
             <ul className="space-y-6">
-              {contactInfo.map(({ icon: Icon, label, value, href }) => (
-                <li key={label} className="flex items-start gap-4">
+              {contactInfoKeys.map(({ icon: Icon, key, value, href }) => (
+                <li key={key} className="flex items-start gap-4">
                   <div className="mt-1 p-2 border-2 border-[#FF3C00]/40 text-[#FF3C00]">
                     <Icon size={16} />
                   </div>
                   <div>
                     <p className="text-[#9CA3AF] text-xs tracking-wider uppercase mb-1 font-heading font-bold">
-                      {label}
+                      {t.contact[key as keyof typeof t.contact]}
                     </p>
                     {href ? (
                       <a
@@ -116,7 +103,7 @@ export default function Contact() {
             }`}
           >
             <h3 className="font-heading text-2xl text-[#F0F0F0] mb-8 tracking-wider font-bold">
-              FOLLOW THE INK
+              {t.contact.followInk}
             </h3>
             <ul className="space-y-4">
               {socialLinks.map(({ icon: Icon, label, href, handle }) => (
@@ -144,7 +131,7 @@ export default function Contact() {
 
             <div className="mt-8 p-6 bg-[#111111] border-2 border-[#1e1e1e] border-l-4 border-l-[#FF3C00]">
               <p className="text-[#F0F0F0] text-sm leading-relaxed">
-                📬 Hit us up with questions, booking inquiries, or custom design ideas. We typically respond within 24 hours.
+                {t.contact.response}
               </p>
             </div>
           </div>

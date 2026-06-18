@@ -2,21 +2,19 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Flame } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-const INITIAL_MESSAGE: Message = {
-  role: "assistant",
-  content:
-    "Yo! This is Robert's crew. Got questions about ink, pricing, or booking? We got answers. What's on your mind?",
-};
-
 export default function ChatWidget() {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: "assistant", content: t.chat.initial },
+  ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,6 +34,7 @@ export default function ChatWidget() {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
 
+    console.log("[ChatWidget] Sending message:", trimmed);
     const userMessage: Message = { role: "user", content: trimmed };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
@@ -43,6 +42,7 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     try {
+      console.log("[ChatWidget] Fetching /api/chat with", updatedMessages.length, "messages");
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,6 +54,7 @@ export default function ChatWidget() {
         }),
       });
 
+      console.log("[ChatWidget] Response status:", response.status);
       if (!response.ok) throw new Error("Request failed");
       if (!response.body) throw new Error("No response body");
 
@@ -64,10 +65,19 @@ export default function ChatWidget() {
       setIsLoading(false);
 
       let accum = "";
+      let chunkCount = 0;
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log("[ChatWidget] Stream ended. Total chunks:", chunkCount);
+          break;
+        }
         const chunk = decoder.decode(value, { stream: true });
+        chunkCount++;
+        console.log(
+          `[ChatWidget] Chunk ${chunkCount} (${chunk.length} bytes):`,
+          chunk.substring(0, 50)
+        );
         accum += chunk;
         setMessages((prev) => {
           const updated = [...prev];
@@ -75,14 +85,14 @@ export default function ChatWidget() {
           return updated;
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("[ChatWidget] Error:", error);
       setIsLoading(false);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            "I'm having trouble connecting right now. Please try again or reach out directly at hello@robertavery.art",
+          content: t.chat.error,
         },
       ]);
     }
@@ -187,7 +197,7 @@ export default function ChatWidget() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Got a question?"
+            placeholder={t.chat.placeholder}
             className="flex-1 bg-[#1A1A1A] border border-[#1e1e1e] text-[#F0F0F0] text-sm px-3 py-2.5 placeholder-[#9CA3AF]/60 focus:outline-none focus:border-[#FF3C00]/60 transition-colors"
             disabled={isLoading}
           />

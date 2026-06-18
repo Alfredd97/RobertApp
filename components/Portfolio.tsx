@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 const portfolioItems = [
   {
@@ -72,6 +73,7 @@ const portfolioItems = [
 export default function Portfolio() {
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -97,10 +99,10 @@ export default function Portfolio() {
           }`}
         >
           <p className="text-[#FF3C00] text-xs tracking-[0.4em] uppercase mb-4 font-heading font-bold">
-            CHECK IT OUT
+            {t.portfolio.checkIt}
           </p>
           <h2 className="font-display text-4xl md:text-5xl text-[#F0F0F0] tracking-widest">
-            THE WORK
+            {t.portfolio.title}
           </h2>
           <div className="h-1 w-20 bg-gradient-to-r from-transparent via-[#FF3C00] to-transparent mx-auto mt-6" />
         </div>
@@ -134,7 +136,7 @@ export default function Portfolio() {
                     </p>
                   </div>
                   <button className="px-6 py-2 bg-[#0A0A0A] text-[#FF3C00] text-xs tracking-widest uppercase font-heading font-bold border-2 border-[#0A0A0A] hover:border-[#FF3C00] transition-colors">
-                    VIEW
+                    {t.portfolio.view}
                   </button>
                 </div>
               </div>

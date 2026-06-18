@@ -1,12 +1,10 @@
-import { Instagram, Facebook } from "lucide-react";
+"use client";
 
-const quickLinks = [
-  { label: "About", href: "#about" },
-  { label: "Portfolio", href: "#portfolio" },
-  { label: "Services", href: "#services" },
-  { label: "Book", href: "#booking" },
-  { label: "Contact", href: "#contact" },
-];
+import { Instagram, Facebook } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+
+const quickLinksKeys = ["about", "portfolio", "services", "book", "contact"] as const;
+const quickLinksHrefs = ["#about", "#portfolio", "#services", "#booking", "#contact"];
 
 const socials = [
   { icon: Instagram, href: "https://www.instagram.com/robertkareltattoo/", label: "Instagram" },
@@ -14,6 +12,7 @@ const socials = [
 ];
 
 export default function Footer() {
+  const { t } = useLanguage();
   return (
     <footer className="bg-[#060606] border-t-2 border-t-[#FF3C00] py-16 px-6">
       <div className="max-w-6xl mx-auto">
@@ -34,13 +33,13 @@ export default function Footer() {
               Navigation
             </p>
             <ul className="space-y-3">
-              {quickLinks.map(({ label, href }) => (
-                <li key={label}>
+              {quickLinksKeys.map((key, idx) => (
+                <li key={key}>
                   <a
-                    href={href}
+                    href={quickLinksHrefs[idx]}
                     className="text-[#9CA3AF] text-sm hover:text-[#FF3C00] transition-colors"
                   >
-                    {label}
+                    {t.nav[key]}
                   </a>
                 </li>
               ))}
@@ -71,11 +70,11 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-[#1e1e1e] flex flex-col sm:flex-row justify-center items-center gap-4">
           <p className="text-[#9CA3AF] text-xs text-center">
-            &copy; {new Date().getFullYear()} ROBERT&apos;S INK. All rights reserved.
+            &copy; {new Date().getFullYear()} ROBERT&apos;S INK. {t.footer.copyright}
           </p>
           <span className="text-[#FF3C00] text-xs">•</span>
           <p className="text-[#C0A060] text-xs tracking-widest uppercase font-heading font-bold">
-            BUILT FOR THE BOLD.
+            {t.footer.tagline}
           </p>
         </div>
       </div>

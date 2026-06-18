@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export default function Hero() {
   const [mounted, setMounted] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -53,7 +55,7 @@ export default function Hero() {
         }`}
       >
         <p className="text-[#FF3C00] text-xs tracking-[0.4em] uppercase mb-6 font-heading font-semibold">
-          Tattoo Artist · Custom Work · Est. 2020
+          {t.hero.artistRole}
         </p>
 
         <h1 className="font-display text-[clamp(3.5rem,15vw,10rem)] leading-none tracking-widest text-[#F0F0F0] mb-6">
@@ -69,7 +71,7 @@ export default function Hero() {
         </div>
 
         <p className="text-[#C0A060] text-lg md:text-xl font-heading tracking-widest mb-12 max-w-2xl mx-auto uppercase font-semibold">
-          Raw &middot; Bold &middot; Authentic
+          {t.hero.tagline}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -77,13 +79,13 @@ export default function Hero() {
             onClick={() => scrollTo("#booking")}
             className="px-8 py-4 bg-[#FF3C00] text-[#0A0A0A] text-sm tracking-widest uppercase font-heading font-bold border-2 border-[#FF3C00] hover:bg-transparent hover:text-[#FF3C00] transition-all duration-300 hover:shadow-[0_0_20px_#FF3C00]"
           >
-            Book Now
+            {t.hero.cta1}
           </button>
           <button
             onClick={() => scrollTo("#portfolio")}
             className="px-8 py-4 border-2 border-[#F0F0F0] text-[#F0F0F0] text-sm tracking-widest uppercase font-heading font-bold hover:border-[#FF3C00] hover:text-[#FF3C00] transition-all duration-300 hover:shadow-[0_0_20px_#FF3C00]"
           >
-            The Work
+            {t.hero.cta2}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow, Bebas_Neue, Oswald } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 
 const bebas = Bebas_Neue({
   subsets: ["latin"],
@@ -37,7 +38,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${bebas.variable} ${oswald.variable} ${barlow.variable}`}>
       <body className="bg-[#0A0A0A] text-[#F0F0F0] font-sans antialiased">
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

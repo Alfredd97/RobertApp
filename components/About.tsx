@@ -2,23 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
-const stats = [
-  { value: "15+", label: "Years Tattooing" },
-  { value: "3K+", label: "Tattoos Completed" },
-  { value: "100%", label: "Clients Love It" },
+const statsEmojis = [
+  { emoji: "15+" },
+  { emoji: "3K+" },
+  { emoji: "100%" },
 ];
 
-const badges = [
-  { emoji: "🏍️", label: "Motorcycles" },
-  { emoji: "🎸", label: "Rock Music" },
-  { emoji: "🚗", label: "Cars" },
-  { emoji: "🖊️", label: "Custom Work" },
+const badgesEmojis = [
+  { emoji: "🏍️" },
+  { emoji: "🎸" },
+  { emoji: "🚗" },
+  { emoji: "🖊️" },
 ];
 
 export default function About() {
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -40,10 +42,10 @@ export default function About() {
           }`}
         >
           <p className="text-[#FF3C00] text-xs tracking-[0.4em] uppercase mb-4 font-heading font-bold">
-            Know the Artist
+            {t.about.know}
           </p>
           <h2 className="font-display text-4xl md:text-5xl text-[#F0F0F0] tracking-widest">
-            ABOUT ROBERT
+            {t.about.title}
           </h2>
           <div className="h-1 w-20 bg-gradient-to-r from-transparent via-[#FF3C00] to-transparent mx-auto mt-6" />
         </div>
@@ -83,41 +85,44 @@ export default function About() {
                 From the Shop
               </p>
               <p className="text-[#F0F0F0] text-xl font-display leading-relaxed italic">
-                &ldquo;Real ink for real people. No compromises, no bullshit.&rdquo;
+                &ldquo;{t.about.quote}&rdquo;
               </p>
             </div>
 
             <p className="text-[#F0F0F0] leading-relaxed mb-4">
-              Robert&apos;s been slingin&apos; ink for over 15 years. Started in dive bars, moved through proper shops, and now runs his own crew. He tattooes the way he lives — raw, bold, and with no apologies. Custom designs, cover-ups, flash work — if you&apos;ve got the guts to sit in the chair, he&apos;s got the needle.
+              {t.about.bio1}
             </p>
             <p className="text-[#F0F0F0] leading-relaxed mb-8">
-              When he&apos;s not behind the needle, you&apos;ll find him in the garage working on bikes, cranking rock records in the studio, or sketching designs that&apos;ll make your skin crawl. His work isn&apos;t just tattoos — it&apos;s stories told in ink. Timeless, bold, authentic.
+              {t.about.bio2}
             </p>
 
             {/* Badges */}
             <div className="flex flex-wrap gap-3 mb-8 py-6 border-y border-[#1e1e1e]">
-              {badges.map(({ emoji, label }) => (
+              {badgesEmojis.map(({ emoji }, idx) => (
                 <div
-                  key={label}
+                  key={idx}
                   className="px-4 py-2 bg-[#141414] border border-[#1e1e1e] rounded-sm text-[#F0F0F0] text-sm tracking-wider uppercase font-heading font-semibold hover:border-[#FF3C00] transition-colors"
                 >
                   <span className="mr-2">{emoji}</span>
-                  {label}
+                  {t.about.badges[idx]}
                 </div>
               ))}
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-              {stats.map(({ value, label }) => (
-                <div key={label} className="text-center">
-                  <p className="font-display text-3xl text-[#FF3C00] mb-1">
-                    {value}
-                  </p>
-                  <p className="text-[#9CA3AF] text-xs tracking-wider uppercase font-heading font-semibold">
-                    {label}
-                  </p>
-                </div>
-              ))}
+              {statsEmojis.map(({ emoji }, idx) => {
+                const statKey = Object.keys(t.about.stats)[idx] as keyof typeof t.about.stats;
+                return (
+                  <div key={idx} className="text-center">
+                    <p className="font-display text-3xl text-[#FF3C00] mb-1">
+                      {emoji}
+                    </p>
+                    <p className="text-[#9CA3AF] text-xs tracking-wider uppercase font-heading font-semibold">
+                      {t.about.stats[statKey]}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

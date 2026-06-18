@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export default function Booking() {
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -28,10 +30,10 @@ export default function Booking() {
         >
           <CalendarDays className="text-[#FF3C00] mx-auto mb-6" size={44} />
           <h2 className="font-display text-5xl md:text-6xl text-[#F0F0F0] mb-6 tracking-widest">
-            GET INKED
+            {t.booking.title}
           </h2>
           <p className="text-[#C0A060] max-w-2xl mx-auto text-lg leading-relaxed font-heading font-bold tracking-wider">
-            NO FLUFF. PICK A TIME. LET&apos;S BUILD SOMETHING.
+            {t.booking.copy}
           </p>
         </div>
 

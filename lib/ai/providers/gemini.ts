@@ -151,7 +151,8 @@ const geminiProvider: AIProvider = {
     params: GenerateResponseParams
   ): AsyncIterable<{ type: "text" | "tool_call"; data: string | ToolCall }> {
     const model = params.model || "gemini-1.5-flash";
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${params.apiKey}`;
+    // Use the regular generateContent endpoint (streaming endpoint may have compatibility issues)
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${params.apiKey}`;
 
     // Map normalized messages to Gemini format
     const contents: GeminiMessage[] = params.messages.map((msg) => ({
@@ -183,7 +184,7 @@ const geminiProvider: AIProvider = {
       ];
     }
 
-    // Make the streaming API request
+    console.log("[Gemini] Starting request to:", model);
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -192,107 +193,46 @@ const geminiProvider: AIProvider = {
       body: JSON.stringify(request),
     });
 
+    console.log("[Gemini] Response status:", response.status);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        `Gemini API error: ${response.status} - ${errorData.error?.message || "Unknown error"}`
-      );
+      const errorData = await response.json().catch(() => ({}));
+      const errorMsg = `Gemini API error: ${response.status} - ${(errorData as Record<string, unknown>).error || "Unknown error"}`;
+      console.error("[Gemini]", errorMsg);
+      throw new Error(errorMsg);
     }
 
-    if (!response.body) {
-      throw new Error("No response body from Gemini API");
-    }
+    // Parse the full response and yield text in chunks for streaming effect
+    const data = (await response.json()) as GeminiResponse;
+    console.log("[Gemini] Received response");
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-
-        // Keep the last incomplete line in the buffer
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const jsonStr = line.slice(6);
-            if (jsonStr.trim()) {
-              try {
-                const chunk = JSON.parse(jsonStr) as GeminiResponse;
-
-                if (
-                  chunk.candidates &&
-                  chunk.candidates.length > 0 &&
-                  chunk.candidates[0].content &&
-                  chunk.candidates[0].content.parts
-                ) {
-                  for (const part of chunk.candidates[0].content.parts) {
-                    if (part.text) {
-                      yield {
-                        type: "text",
-                        data: part.text,
-                      };
-                    } else if (part.functionCall) {
-                      yield {
-                        type: "tool_call",
-                        data: {
-                          name: part.functionCall.name,
-                          input: part.functionCall.args,
-                        },
-                      };
-                    }
-                  }
-                }
-              } catch (e) {
-                // Ignore JSON parse errors in streaming
-              }
-            }
+    if (data.candidates && data.candidates.length > 0) {
+      const candidate = data.candidates[0];
+      if (candidate.content && candidate.content.parts) {
+        console.log("[Gemini] Found", candidate.content.parts.length, "parts");
+        for (const part of candidate.content.parts) {
+          if (part.text) {
+            console.log("[Gemini] Yielding text:", part.text.substring(0, 50));
+            yield {
+              type: "text",
+              data: part.text,
+            };
+          } else if (part.functionCall) {
+            console.log("[Gemini] Yielding function call:", part.functionCall.name);
+            yield {
+              type: "tool_call",
+              data: {
+                name: part.functionCall.name,
+                input: part.functionCall.args,
+              },
+            };
           }
         }
+      } else {
+        console.log("[Gemini] No content in candidate");
       }
-
-      // Process remaining buffer
-      if (buffer.startsWith("data: ")) {
-        const jsonStr = buffer.slice(6);
-        if (jsonStr.trim()) {
-          try {
-            const chunk = JSON.parse(jsonStr) as GeminiResponse;
-
-            if (
-              chunk.candidates &&
-              chunk.candidates.length > 0 &&
-              chunk.candidates[0].content &&
-              chunk.candidates[0].content.parts
-            ) {
-              for (const part of chunk.candidates[0].content.parts) {
-                if (part.text) {
-                  yield {
-                    type: "text",
-                    data: part.text,
-                  };
-                } else if (part.functionCall) {
-                  yield {
-                    type: "tool_call",
-                    data: {
-                      name: part.functionCall.name,
-                      input: part.functionCall.args,
-                    },
-                  };
-                }
-              }
-            }
-          } catch (e) {
-            // Ignore JSON parse errors
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
+    } else {
+      console.log("[Gemini] No candidates in response");
     }
   },
 };
