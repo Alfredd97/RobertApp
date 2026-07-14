@@ -10,6 +10,7 @@ import {
   GenerateResponseResult,
   ToolCall,
 } from "./types";
+import { getTools } from "@/lib/tools/registry";
 
 const anthropic = (apiKey: string) =>
   new Anthropic({
@@ -22,9 +23,9 @@ const anthropicProvider: AIProvider = {
   ): Promise<GenerateResponseResult> {
     const client = anthropic(params.apiKey);
 
-    // Note: Tools integration can be added in the future by properly mapping
-    // NormalizedTool to Anthropic's Tool format with correct input_schema types
-    const response = (await client.messages.create({
+    // Build request with optional tools
+    const tools = params.tools || getTools();
+    const createParams: Parameters<typeof client.messages.create>[0] = {
       model: params.model,
       max_tokens: params.maxTokens || 1024,
       system: [
@@ -38,7 +39,18 @@ const anthropicProvider: AIProvider = {
         role: msg.role,
         content: msg.content,
       })),
-    })) as Anthropic.Message;
+    };
+
+    // Add tools if available
+    if (tools && tools.length > 0) {
+      createParams.tools = tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.input_schema as Anthropic.Tool.InputSchema,
+      }));
+    }
+
+    const response = (await client.messages.create(createParams)) as Anthropic.Message;
 
     let text = "";
     const toolCalls: ToolCall[] = [];
@@ -73,9 +85,9 @@ const anthropicProvider: AIProvider = {
   ): AsyncIterable<{ type: "text" | "tool_call"; data: string | ToolCall }> {
     const client = anthropic(params.apiKey);
 
-    // Note: Tools integration can be added in the future by properly mapping
-    // NormalizedTool to Anthropic's Tool format with correct input_schema types
-    const stream = client.messages.stream({
+    // Build request with optional tools
+    const tools = params.tools || getTools();
+    const streamParams: Parameters<typeof client.messages.stream>[0] = {
       model: params.model,
       max_tokens: params.maxTokens || 1024,
       system: [
@@ -89,7 +101,18 @@ const anthropicProvider: AIProvider = {
         role: msg.role,
         content: msg.content,
       })),
-    });
+    };
+
+    // Add tools if available
+    if (tools && tools.length > 0) {
+      streamParams.tools = tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.input_schema as Anthropic.Tool.InputSchema,
+      }));
+    }
+
+    const stream = client.messages.stream(streamParams);
 
     for await (const event of stream) {
       if (

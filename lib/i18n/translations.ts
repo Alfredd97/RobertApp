@@ -102,8 +102,11 @@ export const translations = {
     },
     // Booking
     booking: {
-      title: "GET INKED",
-      copy: "NO FLUFF. PICK A TIME. LET'S BUILD SOMETHING.",
+      title: "GET IN TOUCH",
+      copy: "Ready to get inked? Book your appointment on WhatsApp or Instagram. Let's create something legendary.",
+      subtitle: "Connect with Robert",
+      whatsapp: "WhatsApp",
+      instagram: "Instagram DM",
     },
     // Contact
     contact: {
@@ -227,8 +230,11 @@ export const translations = {
     },
     // Reserva
     booking: {
-      title: "PONTE UNA TINTA",
-      copy: "SIN RODEOS. ELIGE UN TIEMPO. HAGAMOS ALGO ÉPICO.",
+      title: "PONTE EN CONTACTO",
+      copy: "¿Listo para tatuarte? Reserva tu cita por WhatsApp o Instagram. Vamos a crear algo legendario.",
+      subtitle: "Conecta con Robert",
+      whatsapp: "WhatsApp",
+      instagram: "Instagram DM",
     },
     // Contacto
     contact: {

@@ -45,9 +45,10 @@ interface GeminiPart {
 
 interface GeminiResponse {
   candidates?: Array<{
-    content: {
+    content?: {
       parts: GeminiPart[];
     };
+    finishReason?: string;
   }>;
   error?: {
     code: number;
@@ -115,6 +116,7 @@ const geminiProvider: AIProvider = {
     }
 
     if (!data.candidates || data.candidates.length === 0) {
+      console.error("[Gemini] No candidates returned:", JSON.stringify(data, null, 2));
       throw new Error("No response from Gemini API");
     }
 
@@ -123,6 +125,8 @@ const geminiProvider: AIProvider = {
 
     // Parse response
     const candidate = data.candidates[0];
+    console.log("[Gemini] Candidate finish reason:", candidate.finishReason);
+
     if (candidate.content && candidate.content.parts) {
       for (const part of candidate.content.parts) {
         if (part.text) {
@@ -133,6 +137,16 @@ const geminiProvider: AIProvider = {
             input: part.functionCall.args,
           });
         }
+      }
+    } else {
+      console.error("[Gemini] No content parts in candidate");
+      console.error("[Gemini] Finish reason:", candidate.finishReason);
+
+      // Handle empty responses
+      if (candidate.finishReason === "SAFETY") {
+        text = "I appreciate your interest, but I'm unable to respond to that right now.";
+      } else {
+        text = "I'm having trouble formulating a response. Please try again.";
       }
     }
 
@@ -204,10 +218,12 @@ const geminiProvider: AIProvider = {
 
     // Parse the full response and yield text in chunks for streaming effect
     const data = (await response.json()) as GeminiResponse;
-    console.log("[Gemini] Received response");
+    console.log("[Gemini] Received response:", JSON.stringify(data, null, 2));
 
     if (data.candidates && data.candidates.length > 0) {
       const candidate = data.candidates[0];
+      console.log("[Gemini] Candidate:", JSON.stringify(candidate, null, 2));
+
       if (candidate.content && candidate.content.parts) {
         console.log("[Gemini] Found", candidate.content.parts.length, "parts");
         for (const part of candidate.content.parts) {
@@ -229,10 +245,26 @@ const geminiProvider: AIProvider = {
           }
         }
       } else {
-        console.log("[Gemini] No content in candidate");
+        console.error("[Gemini] No content in candidate. Stop reason:", candidate.finishReason);
+        console.error("[Gemini] Full candidate:", JSON.stringify(candidate, null, 2));
+
+        // Check if this is a safety/content filter block
+        if (candidate.finishReason === "SAFETY") {
+          yield {
+            type: "text",
+            data: "I appreciate your interest, but I'm unable to respond to that at the moment. Please try rephrasing your question.",
+          };
+        } else if (!candidate.content) {
+          yield {
+            type: "text",
+            data: "I'm having trouble formulating a response. Please try again.",
+          };
+        }
       }
     } else {
-      console.log("[Gemini] No candidates in response");
+      console.error("[Gemini] No candidates in response");
+      console.error("[Gemini] Full response:", JSON.stringify(data, null, 2));
+      throw new Error("No candidates returned from Gemini API");
     }
   },
 };

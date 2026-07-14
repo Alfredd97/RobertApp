@@ -5,6 +5,7 @@
  */
 
 import { getProvider, NormalizedMessage, ToolCall } from "./providers";
+import { getTools } from "@/lib/tools/registry";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -72,6 +73,7 @@ export async function generateChatResponse(
   const result = await provider.generateResponse({
     messages: params.messages,
     systemPrompt: params.systemPrompt,
+    tools: getTools(),
     apiKey,
     model: params.model || "claude-sonnet-4-6",
     maxTokens: params.maxTokens,
@@ -97,6 +99,7 @@ export async function* streamChatResponse(
   yield* provider.streamResponse({
     messages: params.messages,
     systemPrompt: params.systemPrompt,
+    tools: getTools(),
     apiKey,
     model: params.model || "claude-sonnet-4-6",
     maxTokens: params.maxTokens,
