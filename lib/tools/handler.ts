@@ -31,7 +31,7 @@ function handleEstimateTattooPrice(
   input: Record<string, unknown>
 ): ToolResult {
   try {
-    const estimationInput = input as EstimationInput;
+    const estimationInput = input as unknown as EstimationInput;
     const result = estimateTattooPrice(estimationInput);
     const summary = createEstimateSummary(estimationInput, result);
 

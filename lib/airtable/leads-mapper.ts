@@ -21,6 +21,7 @@ export interface LeadInput {
 }
 
 export interface AirtableLeadFields {
+  [key: string]: unknown;
   Name: string;
   Contact: string;
   TattooStyle: string;
