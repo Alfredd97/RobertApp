@@ -3,6 +3,7 @@ import { streamChatResponse } from "@/lib/ai/client";
 import { getSystemPrompt } from "@/lib/ai/system-prompts";
 import { executeTool, formatToolResult } from "@/lib/tools/handler";
 import type { ChatMessage } from "@/lib/ai/client";
+import type { ToolCall } from "@/lib/ai/providers/types";
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,12 +73,13 @@ export async function POST(req: NextRequest) {
                 collectedText.push(chunk.data);
                 controller.enqueue(encoder.encode(chunk.data));
               } else if (chunk.type === "tool_call") {
+                const toolCall = chunk.data as ToolCall;
                 console.log(
-                  `[Chat API] !!! TOOL CALL DETECTED: ${chunk.data.name}`,
+                  `[Chat API] !!! TOOL CALL DETECTED: ${toolCall.name}`,
                   `with input:`,
-                  JSON.stringify(chunk.data.input, null, 2)
+                  JSON.stringify(toolCall.input, null, 2)
                 );
-                toolCalls.push(chunk.data);
+                toolCalls.push(toolCall);
               }
             }
             console.log(
