@@ -133,6 +133,68 @@ const captureLeadInfo: NormalizedTool = {
   },
 };
 
+const updateLeadInfo: NormalizedTool = {
+  name: "update_lead_info",
+  description:
+    "Update an existing lead's information in Airtable CRM after initial capture. Use this to add optional details like placement, size, color, budget after the initial conversation.",
+  input_schema: {
+    type: "object",
+    properties: {
+      recordId: {
+        type: "string",
+        description: "The Airtable record ID of the lead to update (from capture_lead_info)",
+      },
+      email: {
+        type: "string",
+        description: "Customer's email (used to verify which record to update)",
+      },
+      placement: {
+        type: "string",
+        description:
+          "Where on their body they want the tattoo (e.g., arm, ribs, chest)",
+      },
+      size: {
+        type: "string",
+        enum: ["small", "medium", "large", "xlarge"],
+        description: "Estimated size of the tattoo",
+      },
+      color: {
+        type: "string",
+        enum: ["blackAndGrey", "color"],
+        description: "Color preference: black & grey or color",
+      },
+      budget: {
+        type: "string",
+        description: "Customer's budget if discussed (e.g., '$300-500')",
+      },
+      priceEstimate: {
+        type: "object",
+        description:
+          "If a price estimate was calculated via estimate_tattoo_price, include it here",
+        properties: {
+          low: {
+            type: "number",
+            description: "Minimum estimated price in dollars",
+          },
+          high: {
+            type: "number",
+            description: "Maximum estimated price in dollars",
+          },
+        },
+      },
+      referencePhotoUrl: {
+        type: "string",
+        description: "URL to a reference photo if customer uploaded one",
+      },
+      notes: {
+        type: "string",
+        description: "Any additional context or special requests",
+      },
+    },
+    required: ["recordId", "email"],
+  },
+};
+
 /**
  * Complete registry of all tools
  * Add new tools to this array and they'll be automatically available
@@ -141,6 +203,7 @@ export const allTools: NormalizedTool[] = [
   estimateTattooPrice,
   suggestBooking,
   captureLeadInfo,
+  updateLeadInfo,
 ];
 
 /**

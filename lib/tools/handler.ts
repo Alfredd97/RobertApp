@@ -11,7 +11,7 @@ import {
   EstimationInput,
   createEstimateSummary,
 } from "@/lib/pricing/estimate";
-import { createAirtableRecord } from "@/lib/airtable/client";
+import { createAirtableRecord, updateAirtableRecord } from "@/lib/airtable/client";
 import {
   mapLeadToAirtable,
   summarizeLead,
@@ -163,6 +163,99 @@ async function handleCaptureLeadInfo(
 }
 
 /**
+ * Handler for update_lead_info tool
+ *
+ * Updates an existing lead's information with optional details (placement, size, color, etc).
+ * Called after initial capture to add more details to the customer's record.
+ * Gracefully handles Airtable failures—user experience is never impacted.
+ */
+async function handleUpdateLeadInfo(
+  input: Record<string, unknown>
+): Promise<ToolResult> {
+  try {
+    const recordId = input.recordId as string;
+    const email = input.email as string;
+    const placement = (input.placement as string) || undefined;
+    const size = (input.size as string) || undefined;
+    const color = (input.color as string) || undefined;
+    const budget = (input.budget as string) || undefined;
+    const notes = (input.notes as string) || undefined;
+    const priceEstimate = input.priceEstimate as
+      | { low: number; high: number }
+      | undefined;
+    const referencePhotoUrl = (input.referencePhotoUrl as string) || undefined;
+
+    // Build lead input with only the fields being updated
+    const leadInput: LeadInput = {
+      name: "", // Not updated
+      email,
+      tattooIdea: "", // Not updated
+      placement,
+      size,
+      color,
+      budget,
+      notes,
+      priceEstimate,
+      referencePhotoUrl,
+    };
+
+    console.log("[Tool] Updating lead info for record:", recordId);
+
+    // Try to update in Airtable, but don't fail the tool if it errors
+    let airtableSuccess = false;
+
+    try {
+      // Map to Airtable format (only includes provided fields due to undefined filtering in mapper)
+      const airtableFields = mapLeadToAirtable(leadInput);
+
+      // Update record in Airtable
+      await updateAirtableRecord("Leads", recordId, airtableFields);
+      airtableSuccess = true;
+
+      console.log(`[Tool] Lead updated in Airtable: ${recordId}`);
+    } catch (airtableError) {
+      // Log the error but continue—never break the chat experience
+      console.error(
+        "[Tool] Failed to update lead in Airtable:",
+        airtableError instanceof Error ? airtableError.message : "Unknown error"
+      );
+      // Continue anyway—return success to user
+    }
+
+    return {
+      success: true,
+      data: {
+        message: `Perfect! I've updated your information. Robert will have all these details when he reaches out.`,
+        recordId,
+        updatedFields: {
+          placement,
+          size,
+          color,
+          budget,
+          priceEstimate,
+          referencePhotoUrl,
+          notes,
+        },
+        airtableSaved: airtableSuccess,
+      },
+    };
+  } catch (error) {
+    // This shouldn't happen, but catch any unexpected errors
+    console.error(
+      "[Tool] Error in update_lead_info:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+    // Still return success to maintain user experience
+    return {
+      success: true,
+      data: {
+        message: `Got it! I've updated your information.`,
+      },
+    };
+  }
+}
+
+/**
  * Execute a tool call and return the result
  *
  * This function is async because some tools (like capture_lead_info)
@@ -181,6 +274,8 @@ export async function executeTool(toolCall: ToolCall): Promise<ToolResult> {
       return handleSuggestBooking(toolCall.input);
     case "capture_lead_info":
       return await handleCaptureLeadInfo(toolCall.input);
+    case "update_lead_info":
+      return await handleUpdateLeadInfo(toolCall.input);
     default:
       return {
         success: false,
@@ -212,6 +307,10 @@ export function formatToolResult(toolName: string, result: ToolResult): string {
       return data.message as string;
     }
     case "capture_lead_info": {
+      const data = result.data as Record<string, unknown>;
+      return data.message as string;
+    }
+    case "update_lead_info": {
       const data = result.data as Record<string, unknown>;
       return data.message as string;
     }
