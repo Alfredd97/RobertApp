@@ -40,6 +40,7 @@ export interface AirtableLeadFields {
 
 /**
  * Normalize placement to valid Airtable select value
+ * Supports English and Spanish input
  */
 function normalizePlacement(
   placement?: string
@@ -48,27 +49,44 @@ function normalizePlacement(
 
   const lower = placement.toLowerCase().trim();
 
-  // Direct matches
-  if (lower === "arm") return "Arm";
-  if (lower === "leg") return "Leg";
+  // English: Direct matches
+  if (lower === "arm" || lower === "arms") return "Arm";
+  if (lower === "leg" || lower === "legs") return "Leg";
   if (lower === "back") return "Back";
   if (lower === "chest") return "Chest";
-  if (lower === "ribs") return "Ribs";
-  if (lower === "hand") return "Hand";
-  if (lower === "foot") return "Foot";
+  if (lower === "ribs" || lower === "rib") return "Ribs";
+  if (lower === "hand" || lower === "hands") return "Hand";
+  if (lower === "foot" || lower === "feet") return "Foot";
   if (lower === "neck") return "Neck";
 
-  // Fuzzy matches
+  // Spanish: Direct matches
+  if (lower === "brazo" || lower === "brazos") return "Arm";
+  if (lower === "pierna" || lower === "piernas") return "Leg";
+  if (lower === "espalda") return "Back";
+  if (lower === "pecho" || lower === "tórax") return "Chest";
+  if (lower === "costillas" || lower === "costilla") return "Ribs";
+  if (lower === "mano" || lower === "manos") return "Hand";
+  if (lower === "pie" || lower === "pies") return "Foot";
+  if (lower === "cuello" || lower === "nuca") return "Neck";
+
+  // English: Fuzzy matches
   if (lower.includes("upper arm") || lower.includes("forearm")) return "Arm";
   if (lower.includes("thigh") || lower.includes("calf") || lower.includes("shin")) return "Leg";
   if (lower.includes("shoulder")) return "Back";
   if (lower.includes("side")) return "Ribs";
+
+  // Spanish: Fuzzy matches
+  if (lower.includes("hombro")) return "Back";
+  if (lower.includes("muslo")) return "Leg";
+  if (lower.includes("pantorrilla")) return "Leg";
+  if (lower.includes("costado")) return "Ribs";
 
   return "Other"; // Default fallback
 }
 
 /**
  * Normalize size to valid Airtable select value
+ * Supports English and Spanish input
  */
 function normalizeSize(
   size?: string
@@ -77,48 +95,92 @@ function normalizeSize(
 
   const lower = size.toLowerCase().trim();
 
-  // Direct matches
+  // English: Direct matches
   if (lower === "small") return "Small";
   if (lower === "medium") return "Medium";
   if (lower === "large") return "Large";
   if (lower === "extra large" || lower === "xl" || lower === "extralarge")
     return "Extra Large";
 
-  // Fuzzy matches
+  // Spanish: Direct matches
+  if (lower === "pequeño" || lower === "pequeña" || lower === "chico" || lower === "chica")
+    return "Small";
+  if (lower === "medio" || lower === "mediano" || lower === "mediana")
+    return "Medium";
+  if (lower === "grande" || lower === "largo" || lower === "larga")
+    return "Large";
+  if (lower === "extra grande" || lower === "muy grande" || lower === "gigante")
+    return "Extra Large";
+
+  // English & Spanish: Abbreviations and fuzzy matches
   if (lower === "s") return "Small";
   if (lower === "m") return "Medium";
   if (lower === "l") return "Large";
   if (lower === "xl" || lower === "xxl") return "Extra Large";
+
+  // Spanish: Abbreviations and fuzzy matches
+  if (lower === "p") return "Small";
+  if (lower === "md" || lower === "med") return "Medium";
+  if (lower === "g") return "Large";
+  if (lower === "xg" || lower === "xxg") return "Extra Large";
 
   return "Medium"; // Default fallback
 }
 
 /**
  * Normalize color to valid Airtable select value
+ * Supports English and Spanish input
  */
 function normalizeColor(color?: string): "Color" | "Black & Grey" | undefined {
   if (!color) return undefined;
 
   const lower = color.toLowerCase().trim();
 
-  // Black & Grey variations
+  // Black & Grey variations (English)
   if (
     lower.includes("black") ||
     lower.includes("grey") ||
     lower.includes("gray") ||
     lower.includes("bw") ||
-    lower.includes("black and grey")
+    lower.includes("black and grey") ||
+    lower.includes("black & grey")
   ) {
     return "Black & Grey";
   }
 
-  // Color variations
+  // Black & Grey variations (Spanish)
+  if (
+    lower.includes("negro") ||
+    lower.includes("gris") ||
+    lower.includes("blanco y negro") ||
+    lower.includes("blanco & negro") ||
+    lower.includes("en gris") ||
+    lower.includes("sin color") ||
+    lower.includes("monocromo")
+  ) {
+    return "Black & Grey";
+  }
+
+  // Color variations (English)
   if (
     lower.includes("color") ||
     lower.includes("coloured") ||
     lower.includes("colored") ||
     lower.includes("full color") ||
-    lower.includes("full colour")
+    lower.includes("full colour") ||
+    lower.includes("rainbow")
+  ) {
+    return "Color";
+  }
+
+  // Color variations (Spanish)
+  if (
+    lower.includes("color") ||
+    lower.includes("colorido") ||
+    lower.includes("a todo color") ||
+    lower.includes("colores") ||
+    lower.includes("arcoíris") ||
+    lower.includes("arco iris")
   ) {
     return "Color";
   }
