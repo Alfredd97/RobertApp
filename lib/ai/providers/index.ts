@@ -7,6 +7,7 @@
 import { AIProvider } from "./types";
 import anthropicProvider from "./anthropic";
 import geminiProvider from "./gemini";
+import openaiProvider from "./openai";
 
 /**
  * Registry of available AI providers
@@ -19,7 +20,7 @@ import geminiProvider from "./gemini";
 export const providers: Record<string, AIProvider> = {
   anthropic: anthropicProvider,
   gemini: geminiProvider,
-  // openai: openaiProvider,  // Example: uncomment when OpenAI provider is added
+  openai: openaiProvider,
 };
 
 /**

@@ -50,34 +50,47 @@ const anthropicProvider: AIProvider = {
       }));
     }
 
-    const response = (await client.messages.create(createParams)) as Anthropic.Message;
+    console.log("[Anthropic] Making request to:", params.model);
 
-    let text = "";
-    const toolCalls: ToolCall[] = [];
+    try {
+      const response = (await client.messages.create(createParams)) as Anthropic.Message;
 
-    for (const block of response.content) {
-      if (block.type === "text") {
-        text += block.text;
-      } else if (block.type === "tool_use") {
-        toolCalls.push({
-          name: block.name,
-          input: block.input as Record<string, unknown>,
-        });
+      let text = "";
+      const toolCalls: ToolCall[] = [];
+
+      for (const block of response.content) {
+        if (block.type === "text") {
+          text += block.text;
+        } else if (block.type === "tool_use") {
+          toolCalls.push({
+            name: block.name,
+            input: block.input as Record<string, unknown>,
+          });
+        }
       }
-    }
 
-    return {
-      text,
-      toolCalls,
-      stopReason: response.stop_reason ?? undefined,
-      usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-        cacheCreationInputTokens:
-          response.usage.cache_creation_input_tokens ?? undefined,
-        cacheReadInputTokens: response.usage.cache_read_input_tokens ?? undefined,
-      },
-    };
+      console.log(
+        `[Anthropic] Response: ${text.length} chars, ${toolCalls.length} tool calls`
+      );
+
+      return {
+        text,
+        toolCalls,
+        stopReason: response.stop_reason ?? undefined,
+        usage: {
+          inputTokens: response.usage.input_tokens,
+          outputTokens: response.usage.output_tokens,
+          cacheCreationInputTokens:
+            response.usage.cache_creation_input_tokens ?? undefined,
+          cacheReadInputTokens: response.usage.cache_read_input_tokens ?? undefined,
+        },
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("[Anthropic] Error:", errorMessage);
+      throw error;
+    }
   },
 
   async *streamResponse(
@@ -112,21 +125,73 @@ const anthropicProvider: AIProvider = {
       }));
     }
 
-    const stream = client.messages.stream(streamParams);
+    console.log("[Anthropic] Starting stream to:", params.model);
 
-    for await (const event of stream) {
-      if (
-        event.type === "content_block_delta" &&
-        event.delta.type === "text_delta"
-      ) {
-        yield {
-          type: "text",
-          data: event.delta.text,
-        };
-      } else if (event.type === "content_block_stop" && event.index !== null) {
-        // Tool calls are available after stream completion
-        // For now, we emit text only during streaming
+    try {
+      const stream = client.messages.stream(streamParams);
+      const toolCalls: Map<number, { name: string; input: Record<string, unknown> }> = new Map();
+      let toolInputBuffer: Record<number, string> = {};
+      let textChunks = 0;
+
+      for await (const event of stream) {
+        if (
+          event.type === "content_block_delta" &&
+          event.delta.type === "text_delta"
+        ) {
+          textChunks++;
+          console.log(
+            `[Anthropic] Text delta (${textChunks}):`,
+            event.delta.text.substring(0, 50)
+          );
+          yield {
+            type: "text",
+            data: event.delta.text,
+          };
+        } else if (event.type === "content_block_start") {
+          // Track tool uses by index
+          if (event.content_block.type === "tool_use") {
+            const index = event.index;
+            console.log(`[Anthropic] Tool use started: ${event.content_block.name}`);
+            toolCalls.set(index, {
+              name: event.content_block.name,
+              input: {},
+            });
+            toolInputBuffer[index] = "";
+          }
+        } else if (
+          event.type === "content_block_delta" &&
+          event.delta.type === "input_json_delta"
+        ) {
+          // Accumulate tool input JSON
+          const index = event.index;
+          toolInputBuffer[index] = (toolInputBuffer[index] || "") + event.delta.partial_json;
+        } else if (event.type === "content_block_stop") {
+          // Tool input is complete, parse and yield
+          const toolCall = toolCalls.get(event.index);
+          if (toolCall && toolInputBuffer[event.index]) {
+            try {
+              toolCall.input = JSON.parse(toolInputBuffer[event.index]);
+              console.log(`[Anthropic] Yielding tool call: ${toolCall.name}`);
+              yield {
+                type: "tool_call",
+                data: toolCall,
+              };
+            } catch (e) {
+              console.error(
+                "[Anthropic] Failed to parse tool input:",
+                toolInputBuffer[event.index]
+              );
+            }
+          }
+        }
       }
+
+      console.log("[Anthropic] Stream complete");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("[Anthropic] Stream error:", errorMessage);
+      throw error;
     }
   },
 };
